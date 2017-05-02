@@ -34,6 +34,7 @@
 
 package org.ozsoft.texasholdem;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -107,6 +108,8 @@ public class Table {
     /** Number of raises in the current betting round. */
     private int raises;
     
+    private PrintWriter writer;
+    
     /**
      * Constructor.
      * 
@@ -136,7 +139,8 @@ public class Table {
     /**
      * Main game loop.
      */
-    public void run() {
+    public void run(PrintWriter writer) {
+    	this.writer = writer;
         for (Player player : players) {
             player.getClient().joinedTable(tableType, bigBlind, players);
         }
@@ -296,7 +300,7 @@ public class Table {
      */
     private void dealHoleCards() {
         for (Player player : activePlayers) {
-            player.setCards(deck.deal(2));
+            player.setCards(deck.deal(2),writer);
         }
         System.out.println();
         notifyPlayersUpdated(false);
@@ -313,7 +317,10 @@ public class Table {
      */
     private void dealCommunityCards(String phaseName, int noOfCards) {
         for (int i = 0; i < noOfCards; i++) {
-            board.add(deck.deal());
+        	//board.add(deck.deal());
+        	Card c = deck.deal();
+            board.add(c);
+            writer.println("["+phaseName+"] "+c.toString());
         }
         notifyPlayersUpdated(false);
         notifyMessage("%s deals the %s.", dealer, phaseName);
@@ -410,7 +417,7 @@ public class Table {
                         playersToAct = activePlayers.size() - 1;
                     }
                 } else if (action == Action.FOLD) {
-                    actor.setCards(null);
+                    actor.setCards(null,writer);
                     activePlayers.remove(actor);
                     actorPosition--;
                     if (activePlayers.size() == 1) {
@@ -579,9 +586,10 @@ public class Table {
                     player.getClient().playerUpdated(playerToShow);
                 }
                 notifyMessage("%s has %s.", playerToShow, handValue.getDescription());
+                writer.println(String.format("%s has %s", playerToShow, handValue.getDescription()));
             } else {
                 // Fold.
-                playerToShow.setCards(null);
+                playerToShow.setCards(null,writer);
                 activePlayers.remove(playerToShow);
                 for (Player player : players) {
                     if (player.equals(playerToShow)) {
@@ -672,6 +680,7 @@ public class Table {
                 winnerText.append(", ");
             }
             winnerText.append(String.format("%s wins $ %d", winner, potShare));
+            writer.println(String.format("%s wins $ %d", winner, potShare));
             notifyPlayersUpdated(true);
         }
         winnerText.append('.');

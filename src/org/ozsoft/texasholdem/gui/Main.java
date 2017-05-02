@@ -20,6 +20,10 @@ package org.ozsoft.texasholdem.gui;
 import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -83,6 +87,9 @@ public class Main extends JFrame implements Client {
 
     /** The current actor's name. */
     private String actorName; 
+    
+    private PrintWriter writer;
+   
 
     /**
      * Constructor.
@@ -103,8 +110,7 @@ public class Main extends JFrame implements Client {
         
         players = new LinkedHashMap<String, Player>();
         humanPlayer = new Player("Player", STARTING_CASH, this);
-        //players.put("Player", humanPlayer);
-        players.put("Clara", humanPlayer);
+        players.put("Player", humanPlayer);
         players.put("Joe",    new Player("Joe",   STARTING_CASH, new BasicBot(0, 75)));
         //players.put("Mike",   new Player("Mike",  STARTING_CASH, new BasicBot(25, 50)));
         //players.put("Eddie",  new Player("Eddie", STARTING_CASH, new BasicBot(50, 25)));
@@ -147,8 +153,22 @@ public class Main extends JFrame implements Client {
         setLocationRelativeTo(null);
         setVisible(true);
 
+        try {
+			writer = new PrintWriter(Instant.now().toString()+".txt", "UTF-8");
+        
         // Start the game.
-        table.run();
+        table.run(writer);
+        
+        writer.flush();
+        writer.close();
+        
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
     
     /**
@@ -213,6 +233,8 @@ public class Main extends JFrame implements Client {
             Action action = player.getAction();
             if (action != null) {
                 boardPanel.setMessage(String.format("%s %s.", name, action.getVerb()));
+                writer.println(String.format("%s %s %s", name, action.getVerb(),
+                		action.getAmount()==0?"":"$ "+action.getAmount()));
                 if (player.getClient() != this) {
                     boardPanel.waitForUserInput();
                 }

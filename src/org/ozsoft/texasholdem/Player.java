@@ -17,6 +17,7 @@
 
 package org.ozsoft.texasholdem;
 
+import java.io.PrintWriter;
 import java.util.List;
 
 import org.ozsoft.texasholdem.actions.Action;
@@ -102,13 +103,14 @@ public class Player {
     /**
      * Sets the hole cards.
      */
-    public void setCards(List<Card> cards) {
+    public void setCards(List<Card> cards, PrintWriter writer) {
         hand.removeAllCards();
         if (cards != null) {
             if (cards.size() == 2) {
                 hand.addCards(cards);
                 hasCards = true;
                 System.out.format("[CHEAT] %s's cards:\t%s\n", name, hand);
+                writer.println(String.format("[CHEAT] %s's cards:\t%s", name, hand));
             } else {
                 throw new IllegalArgumentException("Invalid number of cards");
             }
