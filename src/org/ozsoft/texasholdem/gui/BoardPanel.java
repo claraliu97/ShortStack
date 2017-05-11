@@ -170,7 +170,7 @@ public class BoardPanel extends JPanel {
         gc.weighty = 1.0;
         add(controlPanel, gc);
         
-        setPreferredSize(new Dimension(400, 270));
+        setPreferredSize(new Dimension(400, 400));
         
         update(null, 0, 0);
     }

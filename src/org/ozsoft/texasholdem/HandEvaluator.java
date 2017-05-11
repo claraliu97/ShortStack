@@ -101,7 +101,8 @@ public class HandEvaluator {
                  isStraight()      ||
                  isThreeOfAKind()  ||
                  isTwoPairs()      ||
-                 isOnePair());
+                 isOnePair()	   ||
+                 containsTopPair());
         if (!isSpecialValue) {
             calculateHighCard();
         }
@@ -212,6 +213,38 @@ public class HandEvaluator {
                     pairs[noOfPairs++] = i;
                 }
             }
+        }
+    }
+    
+    
+    /**
+     * Returns true if this hand contains Top Pairs.
+     * 
+     * @return True if this hand contains Top Pair.
+     */
+    private boolean containsTopPair() {
+        if (noOfPairs == 1 || noOfPairs == 2) {
+            int pairRank = pairs[0];
+            rankings[1] = pairRank;
+            for (Card card : cards) {
+                int rank = card.getRank();
+                if (rank > pairRank) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        else if (tripleRank != -1) {
+            for (Card card : cards) {
+                int rank = card.getRank();
+                if (rank > tripleRank) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        else {
+        	return false;
         }
     }
 
