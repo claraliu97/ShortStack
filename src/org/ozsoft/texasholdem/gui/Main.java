@@ -21,6 +21,7 @@ import java.awt.Component;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.time.Instant;
@@ -39,6 +40,8 @@ import org.ozsoft.texasholdem.Table;
 import org.ozsoft.texasholdem.TableType;
 import org.ozsoft.texasholdem.actions.Action;
 import org.ozsoft.texasholdem.bots.BasicBot;
+import org.ozsoft.texasholdem.bots.AiBot;
+
 
 /**
  * The game's main frame.
@@ -111,7 +114,7 @@ public class Main extends JFrame implements Client {
         players = new LinkedHashMap<String, Player>();
         humanPlayer = new Player("Player", STARTING_CASH, this);
         players.put("Player", humanPlayer);
-        players.put("Joe",    new Player("Joe",   STARTING_CASH, new BasicBot(0, 75)));
+        players.put("Ai",    new Player("Ai",   STARTING_CASH, new AiBot(0, 75)));
         //players.put("Mike",   new Player("Mike",  STARTING_CASH, new BasicBot(25, 50)));
         //players.put("Eddie",  new Player("Eddie", STARTING_CASH, new BasicBot(50, 25)));
 
@@ -154,7 +157,7 @@ public class Main extends JFrame implements Client {
         setVisible(true);
 
         try {
-			writer = new PrintWriter(Instant.now().toString()+".txt", "UTF-8");
+			writer = new PrintWriter(new FileOutputStream(Instant.now().toString()+".txt"), true);
         
         // Start the game.
         table.run(writer);
@@ -165,10 +168,7 @@ public class Main extends JFrame implements Client {
 		} catch (FileNotFoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		} 
     }
     
     /**
@@ -246,7 +246,7 @@ public class Main extends JFrame implements Client {
     }
 
     @Override
-    public Action act(int minBet, int currentBet, Set<Action> allowedActions) {
+    public Action act(int minBet, int currentBet, Set<Action> allowedActions, Card[] cards) {
         boardPanel.setMessage("Please select an action:");
         return controlPanel.getUserInput(minBet, humanPlayer.getCash(), allowedActions);
     }

@@ -23,6 +23,7 @@ import java.util.Set;
 import org.ozsoft.texasholdem.Card;
 import org.ozsoft.texasholdem.Player;
 import org.ozsoft.texasholdem.TableType;
+import org.ozsoft.texasholdem.AiUtil;
 import org.ozsoft.texasholdem.actions.Action;
 import org.ozsoft.texasholdem.actions.BetAction;
 import org.ozsoft.texasholdem.actions.RaiseAction;
@@ -49,7 +50,7 @@ import org.ozsoft.texasholdem.util.PokerUtils;
  * 
  * @author Oscar Stigter
  */
-public class BasicBot extends Bot {
+public class AiBot extends Bot {
     
     /** Tightness (0 = loose, 100 = tight). */
     private final int tightness;
@@ -72,7 +73,7 @@ public class BasicBot extends Bot {
      *            The bot's aggressiveness in betting (0 = careful, 100 =
      *            aggressive).
      */
-    public BasicBot(int tightness, int aggression) {
+    public AiBot(int tightness, int aggression) {
         if (tightness < 0 || tightness > 100) {
             throw new IllegalArgumentException("Invalid tightness setting");
         }
@@ -129,15 +130,30 @@ public class BasicBot extends Bot {
 
     /** {@inheritDoc} */
     @Override
-    public Action act(int minBet, int currentBet, Set<Action> allowedActions, Card[] cards) {
+    public Action act(int minBet, int currentBet, Set<Action> allowedActions, Card[] commuCards) {
         Action action = null;
         if (allowedActions.size() == 1) {
             // No choice, must check.
             action = Action.CHECK;
         } else {
-            double chenScore = PokerUtils.getChenScore(cards);
-            double chenScoreToPlay = tightness * 0.2;
-            if ((chenScore < chenScoreToPlay)) {
+        	int len = 0;
+        	for (Card c: commuCards) {
+        		if (c!=null) {len += 1;}
+        	}
+        	
+            double callScore = AiUtil.cutoff(len)[0];
+            double betScore = AiUtil.cutoff(len)[1];
+            
+            Card[] allCards = new Card[len+2];
+            allCards[0] = cards[0];
+            allCards[1] = cards[1];
+            for(int i=2; i<len+2; i++) {
+            	allCards[i] = commuCards[i-2];
+            }
+            double Score = AiUtil.eval(allCards);
+            System.out.printf(AiUtil.printCards(allCards)+":%.4f\n",Score);
+            
+            if ((Score<callScore)) {
                 if (allowedActions.contains(Action.CHECK)) {
                     // Always check for free if possible.
                     action = Action.CHECK;
@@ -147,7 +163,7 @@ public class BasicBot extends Bot {
                 }
             } else {
                 // Good enough hole cards, play hand.
-                if ((chenScore - chenScoreToPlay) >= ((20.0 - chenScoreToPlay) / 2.0)) {
+                if (Score>=betScore) {
                     // Very good hole cards; bet or raise!
                     if (aggression == 0) {
                         // Never bet.

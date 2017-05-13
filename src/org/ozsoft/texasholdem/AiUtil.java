@@ -1,11 +1,20 @@
 package org.ozsoft.texasholdem;
 
+import org.ozsoft.texasholdem.util.PokerUtils;
 
-public class Test {
+public class AiUtil {
 	
 	//Percentage of the role that unknown cards play in evaluating a hand
 	private static final double flopRate = 0.5; 
 	private static final double riverRate = 0.25; 
+	
+	public static String printCards(Card[] cards) {
+		String s = "";
+		for (Card c: cards) {
+			s += c.toString()+" ";
+		}
+		return s;
+	}
 	
 	/**Input: two hole cards and three flop cards
 	 * Output: the expectation of the final value of the current hand
@@ -47,10 +56,10 @@ public class Test {
 		return score;
 	}
 	
-	/**Input: two hole cards, three flop cards and one river card
+	/**Input: two hole cards, three flop cards and one turn card
 	 * Output: the expectation of the final value of the current hand
 	 */
-	public static double riverEval(Card[] flopCards) {
+	public static double turnEval(Card[] flopCards) {
 		Hand knownHand = new Hand(flopCards);
 		HandEvaluator knownEval = new HandEvaluator(knownHand);
 		int knownScore = knownEval.getType().getValue();
@@ -78,7 +87,7 @@ public class Test {
 		return score;
 	}
 	
-	
+	//Check if Card c is in Card[] cards
 	public static boolean repeat(Card[] cards, Card c) {
 		int suit = c.getSuit();
 		int rank = c.getRank();
@@ -89,9 +98,44 @@ public class Test {
 		return false;
 	}
 	
+	/**The overall eval function for a hand at pre-flop, flop, turn and river
+	 * @param cards: community cards + hole cards
+	 * @return the evaluated value of the hand
+	 */
+	public static double eval(Card[] cards) {
+		int len = cards.length;
+		if(len==2) {
+			return PokerUtils.getChenScore(cards);
+		} else if(len==5) {
+			return flopEval(cards);
+		} else if(len==6) {
+			return turnEval(cards);
+		} else if(len==7) {
+			Hand testHand = new Hand(cards);
+			HandEvaluator eval = new HandEvaluator(testHand);
+			return eval.getType().getValue();
+		} else {
+			return 0;
+		}
+	}
 	
-	
-	
+	/**Returns the two evaluation cutoffs to tell how the ai should act
+	 * @param num: the number of community cards
+	 * @return [cut1,cut2]: cut1 is the callScore (higher than this can call)
+	 * cut 2 is the betScore (high than this can bet)
+	 */
+	public static int[] cutoff(int num) {
+		int[][] cutoffs = new int[6][2];
+		cutoffs[0][0] = 4;
+		cutoffs[0][1] = 7;
+		cutoffs[3][0] = 2;
+		cutoffs[3][1] = 3;
+		cutoffs[4][0] = 2;
+		cutoffs[4][1] = 3;
+		cutoffs[5][0] = 2;
+		cutoffs[5][1] = 3;
+		return cutoffs[num];
+	}
 	
 	public static void main(String args[]) {
 		Card[] cards = new Card [5];
@@ -109,7 +153,7 @@ public class Test {
 		}
 		cards2[5] = new Card("2s");
 		
-		System.out.printf("river score: %.4f\n",riverEval(cards2));
+		System.out.printf("turn score: %.4f\n",turnEval(cards2));
 		
 	}
 

@@ -109,6 +109,6 @@ public interface Client {
      * 
      * @return The selected action.
      */
-    Action act(int minBet, int currentBet, Set<Action> allowedActions);
+    Action act(int minBet, int currentBet, Set<Action> allowedActions, Card[] commuCards);
 
 }

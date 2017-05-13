@@ -170,6 +170,7 @@ public class Table {
         }
         notifyPlayersUpdated(false);
         notifyMessage("Game over.");
+        writer.println("---Game over---");
     }
     
     /**
@@ -361,7 +362,8 @@ public class Table {
             } else {
                 // Otherwise allow client to act.
                 Set<Action> allowedActions = getAllowedActions(actor);
-                action = actor.getClient().act(minBet, bet, allowedActions);
+                Card[] boardarr = board.toArray(new Card[board.size()]);
+                action = actor.getClient().act(minBet, bet, allowedActions,boardarr);
                 // Verify chosen action to guard against broken clients (accidental or on purpose).
                 if (!allowedActions.contains(action)) {
                     if (action instanceof BetAction && !allowedActions.contains(Action.BET)) {
@@ -680,7 +682,7 @@ public class Table {
                 winnerText.append(", ");
             }
             winnerText.append(String.format("%s wins $ %d", winner, potShare));
-            writer.println(String.format("%s wins $ %d", winner, potShare));
+            writer.println(String.format("%s wins $ %d\n", winner, potShare));
             notifyPlayersUpdated(true);
         }
         winnerText.append('.');
