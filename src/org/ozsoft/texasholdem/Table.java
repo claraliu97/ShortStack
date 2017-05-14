@@ -363,7 +363,8 @@ public class Table {
                 // Otherwise allow client to act.
                 Set<Action> allowedActions = getAllowedActions(actor);
                 Card[] boardarr = board.toArray(new Card[board.size()]);
-                action = actor.getClient().act(minBet, bet, allowedActions,boardarr);
+                boolean dealer = dealerPosition == actorPosition;
+                action = actor.getClient().act(minBet, bet, allowedActions,boardarr,getTotalPot(),dealer);
                 // Verify chosen action to guard against broken clients (accidental or on purpose).
                 if (!allowedActions.contains(action)) {
                     if (action instanceof BetAction && !allowedActions.contains(Action.BET)) {

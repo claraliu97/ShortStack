@@ -114,7 +114,7 @@ public class Main extends JFrame implements Client {
         players = new LinkedHashMap<String, Player>();
         humanPlayer = new Player("Player", STARTING_CASH, this);
         players.put("Player", humanPlayer);
-        players.put("Ai",    new Player("Ai",   STARTING_CASH, new AiBot(0, 75)));
+        players.put("Ai",    new Player("Ai",   STARTING_CASH, new AiBot(25, 25)));
         //players.put("Mike",   new Player("Mike",  STARTING_CASH, new BasicBot(25, 50)));
         //players.put("Eddie",  new Player("Eddie", STARTING_CASH, new BasicBot(50, 25)));
 
@@ -246,7 +246,7 @@ public class Main extends JFrame implements Client {
     }
 
     @Override
-    public Action act(int minBet, int currentBet, Set<Action> allowedActions, Card[] cards) {
+    public Action act(int minBet, int currentBet, Set<Action> allowedActions, Card[] cards,int pot, boolean dealer) {
         boardPanel.setMessage("Please select an action:");
         return controlPanel.getUserInput(minBet, humanPlayer.getCash(), allowedActions);
     }

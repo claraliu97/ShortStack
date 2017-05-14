@@ -1,12 +1,16 @@
 package org.ozsoft.texasholdem;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+
 import org.ozsoft.texasholdem.util.PokerUtils;
 
 public class AiUtil {
 	
 	//Percentage of the role that unknown cards play in evaluating a hand
-	private static final double flopRate = 0.5; 
-	private static final double riverRate = 0.25; 
+	private static final double flopRate = 0.1; 
+	private static final double riverRate = 0.05; 
 	
 	public static String printCards(Card[] cards) {
 		String s = "";
@@ -22,7 +26,7 @@ public class AiUtil {
 	public static double flopEval(Card[] flopCards) {
 		Hand knownHand = new Hand(flopCards);
 		HandEvaluator knownEval = new HandEvaluator(knownHand);
-		int knownScore = knownEval.getType().getValue();
+		double knownScore = getValue(knownEval);
 		
 		Card[] cards = new Card[7];
 		for (int i=0;i<5;i++) {
@@ -44,15 +48,17 @@ public class AiUtil {
 								cards[6] = new2;
 								Hand testHand = new Hand(cards);
 								HandEvaluator eval = new HandEvaluator(testHand);
-								futureScore += eval.getType().getValue();
-								count += 1;
+								if (getValue(eval)>knownScore) {
+									futureScore += getValue(eval);
+									count += 1;
+								}
 							}
 						}
 					}
 				}
 			}
 		}
-		double score = (1-flopRate)*knownScore + flopRate*futureScore/count;
+		double score = count==0?knownScore:((1-flopRate)*knownScore + flopRate*futureScore/count);
 		return score;
 	}
 	
@@ -62,7 +68,7 @@ public class AiUtil {
 	public static double turnEval(Card[] flopCards) {
 		Hand knownHand = new Hand(flopCards);
 		HandEvaluator knownEval = new HandEvaluator(knownHand);
-		int knownScore = knownEval.getType().getValue();
+		double knownScore = getValue(knownEval);
 		
 		Card[] cards = new Card[7];
 		for (int i=0;i<6;i++) {
@@ -78,12 +84,14 @@ public class AiUtil {
 					cards[6] = new2;
 					Hand testHand = new Hand(cards);
 					HandEvaluator eval = new HandEvaluator(testHand);
-					futureScore += eval.getType().getValue();
-					count += 1;
+					if (getValue(eval)>knownScore) {
+						futureScore += getValue(eval);
+						count += 1;
+					}
 				}
 			}
 		}	
-		double score = (1-riverRate)*knownScore + riverRate*futureScore/count;
+		double score = count==0?knownScore:((1-riverRate)*knownScore + riverRate*futureScore/count);
 		return score;
 	}
 	
@@ -113,7 +121,7 @@ public class AiUtil {
 		} else if(len==7) {
 			Hand testHand = new Hand(cards);
 			HandEvaluator eval = new HandEvaluator(testHand);
-			return eval.getType().getValue();
+			return getValue(eval);
 		} else {
 			return 0;
 		}
@@ -125,27 +133,87 @@ public class AiUtil {
 	 * cut 2 is the betScore (high than this can bet)
 	 */
 	public static int[] cutoff(int num) {
-		int[][] cutoffs = new int[6][2];
-		cutoffs[0][0] = 4;
-		cutoffs[0][1] = 7;
-		cutoffs[3][0] = 2;
-		cutoffs[3][1] = 3;
-		cutoffs[4][0] = 2;
-		cutoffs[4][1] = 3;
-		cutoffs[5][0] = 2;
-		cutoffs[5][1] = 3;
+		int[][] cutoffs =  {{4,7},
+				  			{0,0},
+							{0,0},
+							{2,3},
+							{2,3},
+							{2,3}};
 		return cutoffs[num];
+	}
+	
+	/** Returns how good a hand is according to the machine learning result
+	 * 0 = bad, 1 = decent, 2 = good
+	 * @param cards
+	 * @return
+	 */
+	public static int level(Card[] cards) {
+		double[] w0 = new double[] {0,0,0};
+		double[] w1 = new double[] {0,0,0};
+		Perceptron p1 = new Perceptron(w0[0],new double[] {w0[1],w0[2]});
+		Perceptron p2 = new Perceptron(w1[0],new double[] {w1[1],w1[2]});
+		double whole = eval(cards);
+		double hole = eval(new Card[] {cards[0],cards[1]});
+		if (p1.Output(new double[] {hole,whole})==0) {
+			return 0;
+		} else if(p2.Output(new double[] {hole,whole})==1) {
+			return 2;
+		} else {
+			return 1;
+		}
+	}
+	
+	public static Perceptron cutoffLearning (String filename) {
+		Perceptron p = new Perceptron(0,new double[] {0,0});
+		try(BufferedReader br = new BufferedReader(new FileReader(filename))) {
+		    String line = br.readLine();
+		    int size = Integer.parseInt(line);
+		    int[] outputs = new int[size];
+		    double[][] inputs = new double[size][2];
+		    
+		    for (int i=0; i<size; i++) {
+		    	line = br.readLine();
+		    	String[] thisline = line.split(" ");
+		    	int len = thisline.length;
+		    	int y = Integer.parseInt(thisline[len-1]);
+		    	Card[] cards = new Card[len-1];
+		    	for (int j=0; j<len-1; j++) {
+		    		cards[j] = new Card(thisline[j]);
+		    	}
+		    	
+		    	double whole = eval(cards);
+		    	double hole = eval(new Card[] {cards[0],cards[1]});
+		    	
+		    	outputs[i] = y;
+		    	inputs[i] = new double[] {hole,whole};
+		    	
+		    	System.out.printf("%.0f %.2f %d "+printCards(cards)+"\n",hole,whole,y);
+		    }
+
+			p.Train(inputs, outputs, 0.5, 2000000);
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return p;
+	}
+	
+	public static double getValue(HandEvaluator eval) {
+		return eval.getType().getValue()*eval.containsTopP;
 	}
 	
 	public static void main(String args[]) {
 		Card[] cards = new Card [5];
-		cards[1] = new Card("As");
-		cards[2] = new Card("Ks");
-		cards[3] = new Card("Qs");
-		cards[4] = new Card("Js");
-		cards[0] = new Card("Th");
+		cards[0] = new Card("Ts");
+		cards[1] = new Card("Tc");
+		cards[2] = new Card("As");
+		cards[3] = new Card("Ac");
+		cards[4] = new Card("4d");
 		
 		System.out.printf("flop score: %.4f\n",flopEval(cards));
+		Hand testHand = new Hand(cards);
+		HandEvaluator eval = new HandEvaluator(testHand);
+		System.out.printf("TP=%d\n",eval.containsTopP);
 		
 		Card[] cards2 = new Card [6];
 		for (int i=0; i<5; i++) {
@@ -153,8 +221,9 @@ public class AiUtil {
 		}
 		cards2[5] = new Card("2s");
 		
-		System.out.printf("turn score: %.4f\n",turnEval(cards2));
-		
+		//System.out.printf("turn score: %.4f\n",turnEval(cards2));
+		Perceptron haha = cutoffLearning("ShortStack_data12.txt");
+		//System.out.println(haha.Output(new double[] {0,0}));
 	}
 
 }

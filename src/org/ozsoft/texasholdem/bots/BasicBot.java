@@ -129,7 +129,7 @@ public class BasicBot extends Bot {
 
     /** {@inheritDoc} */
     @Override
-    public Action act(int minBet, int currentBet, Set<Action> allowedActions, Card[] cards) {
+    public Action act(int minBet, int currentBet, Set<Action> allowedActions, Card[] cards, int pot,boolean dealer) {
         Action action = null;
         if (allowedActions.size() == 1) {
             // No choice, must check.

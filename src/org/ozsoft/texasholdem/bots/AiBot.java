@@ -130,7 +130,7 @@ public class AiBot extends Bot {
 
     /** {@inheritDoc} */
     @Override
-    public Action act(int minBet, int currentBet, Set<Action> allowedActions, Card[] commuCards) {
+    public Action act(int minBet, int currentBet, Set<Action> allowedActions, Card[] commuCards, int pot,boolean dealer) {
         Action action = null;
         if (allowedActions.size() == 1) {
             // No choice, must check.
@@ -150,10 +150,9 @@ public class AiBot extends Bot {
             for(int i=2; i<len+2; i++) {
             	allCards[i] = commuCards[i-2];
             }
-            double Score = AiUtil.eval(allCards);
-            System.out.printf(AiUtil.printCards(allCards)+":%.4f\n",Score);
+            int l = AiUtil.level(allCards);
             
-            if ((Score<callScore)) {
+            if ((l==0)) {
                 if (allowedActions.contains(Action.CHECK)) {
                     // Always check for free if possible.
                     action = Action.CHECK;
@@ -163,7 +162,7 @@ public class AiBot extends Bot {
                 }
             } else {
                 // Good enough hole cards, play hand.
-                if (Score>=betScore) {
+                if (l==2) {
                     // Very good hole cards; bet or raise!
                     if (aggression == 0) {
                         // Never bet.
@@ -213,11 +212,30 @@ public class AiBot extends Bot {
                     }
                 } else {
                     // Decent hole cards; check or call.
-                    if (allowedActions.contains(Action.CHECK)) {
-                        action = Action.CHECK;
-                    } else {
-                        action = Action.CALL;
-                    }
+                	// The player acts first
+                	if (!dealer) {
+	                    if (allowedActions.contains(Action.CHECK)) {
+	                        action = Action.CHECK;
+	                    } else {
+	                        action = Action.CALL;
+	                    }
+                	} 
+                	// The opponent acts first
+                	else {
+                		if (currentBet<=0.5*pot) {
+                			if (allowedActions.contains(Action.CHECK)) {
+    	                        action = Action.CHECK;
+    	                    } else {
+    	                        action = Action.CALL;
+    	                    }
+                		} else {
+                			if (allowedActions.contains(Action.CHECK)) {
+    	                        action = Action.CHECK;
+    	                    } else {
+    	                        action = Action.FOLD;
+    	                    }
+                		}
+                	}
                 }
             }
         }

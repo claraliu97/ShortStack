@@ -25,25 +25,25 @@ package org.ozsoft.texasholdem;
 public enum HandValueType {
     
     /** Royal flush (Ace-high Straight Flush). */
-    ROYAL_FLUSH("a Royal Flush", 9),
+    ROYAL_FLUSH("a Royal Flush", 25),
     
     /** Straight Flush (a Straight and a Flush, less than Ace-high). */
-    STRAIGHT_FLUSH("a Straight Flush", 8),
+    STRAIGHT_FLUSH("a Straight Flush", 23),
 
     /** Four of a Kind (four cards of the same rank). */ 
-    FOUR_OF_A_KIND("Four of a Kind", 7),
+    FOUR_OF_A_KIND("Four of a Kind", 20),
     
     /** Full House (a Three of a Kind and Two Pairs). */
-    FULL_HOUSE("a Full House", 6),
+    FULL_HOUSE("a Full House", 18),
     
     /** Flush (five cards of the same suit). */
-    FLUSH("a Flush", 5),
+    FLUSH("a Flush", 15),
     
     /** Straight (five cards in sequential order). */
-    STRAIGHT("a Straight", 4),
+    STRAIGHT("a Straight", 11),
 
     /** Three of a Kind (three cards of the same rank). */
-    THREE_OF_A_KIND("Three of a Kind", 3),
+    THREE_OF_A_KIND("Three of a Kind", 5),
     
     /** Two Pairs (two pairs). */
     TWO_PAIRS("Two Pairs", 2),

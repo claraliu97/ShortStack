@@ -77,7 +77,11 @@ public class HandEvaluator {
     
     /** The weighed components of the hand value (highest first). */
     private int[] rankings = new int[NO_OF_RANKINGS];
-
+    
+    public int containsTopP = 1;
+    
+    public Card[] holes = new Card[2];
+    
     /**
      * Constructor.
      *
@@ -85,6 +89,7 @@ public class HandEvaluator {
      */
     public HandEvaluator(Hand hand) {
         cards = hand.getCards();
+        holes = hand.getHole();
         
         // Find patterns.
         calculateDistributions();
@@ -101,8 +106,7 @@ public class HandEvaluator {
                  isStraight()      ||
                  isThreeOfAKind()  ||
                  isTwoPairs()      ||
-                 isOnePair()	   ||
-                 containsTopPair());
+                 isOnePair())	   ;
         if (!isSpecialValue) {
             calculateHighCard();
         }
@@ -214,6 +218,7 @@ public class HandEvaluator {
                 }
             }
         }
+        containsTopPair();
     }
     
     
@@ -222,29 +227,38 @@ public class HandEvaluator {
      * 
      * @return True if this hand contains Top Pair.
      */
-    private boolean containsTopPair() {
-        if (noOfPairs == 1 || noOfPairs == 2) {
-            int pairRank = pairs[0];
-            rankings[1] = pairRank;
-            for (Card card : cards) {
-                int rank = card.getRank();
-                if (rank > pairRank) {
-                    return false;
-                }
+    private void containsTopPair() {
+    	if (noOfPairs == 2 ) {
+    		boolean isT = true;
+            int pairRank = pairs[0]>pairs[1] ? pairs[0]:pairs[1];
+            if (holes[0].getRank() != pairRank && holes[1].getRank() != pairRank) 
+            	isT = false;
+            for(Card c : cards){
+            	if (c.getRank() != holes[0].getRank() && c.getRank() != holes[1].getRank()){
+            		if(c.getRank() > pairRank)
+            			isT = false;
+            	}
             }
-            return true;
+            if(isT)
+            	containsTopP = 2;
+        }
+    	else if (noOfPairs == 1 ) {
+    		boolean isT = true;
+            int pairRank = pairs[0];
+            if (holes[0].getRank() != pairRank && holes[1].getRank() != pairRank) 
+            	isT = false;
+            for(Card c : cards){
+            	if (c.getRank() != holes[0].getRank() && c.getRank() != holes[1].getRank()){
+            		if(c.getRank() > pairRank)
+            			isT = false;
+            	}
+            }
+            if(isT)
+            	containsTopP = 2;
         }
         else if (tripleRank != -1) {
-            for (Card card : cards) {
-                int rank = card.getRank();
-                if (rank > tripleRank) {
-                    return false;
-                }
-            }
-            return true;
-        }
-        else {
-        	return false;
+            if (holes[0].getRank() == tripleRank || holes[1].getRank() == tripleRank) 
+            	containsTopP = 2;
         }
     }
 

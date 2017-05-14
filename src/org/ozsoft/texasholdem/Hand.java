@@ -41,6 +41,8 @@ public class Hand {
     /** The current number of cards in this hand. */
     private int noOfCards = 0;
     
+    private Card[] holeCards = new Card[2];
+    
     /**
      * Constructor for an empty hand.
      */
@@ -167,9 +169,15 @@ public class Hand {
         if (cards.length > MAX_NO_OF_CARDS) {
             throw new IllegalArgumentException("Too many cards");
         }
+        holeCards[0] = cards[0];
+        holeCards[1] = cards[1];
         for (Card card : cards) {
             addCard(card);
         }
+    }
+    
+    public Card[] getHole() {
+    	return holeCards;
     }
     
     /**
